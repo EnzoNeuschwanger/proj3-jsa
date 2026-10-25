@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-<title>Vocabulary Anagram</title>
+<title>Vocabulary Anagram ajax edition</title>
 
 <!-- Javascript and Cascading Style Sheets (css) libraries -->
 <!-- mostly from content delivery networks                 -->
@@ -84,32 +84,62 @@
     <label for="attempt">Word:</label>
     <input id="attempt" name="attempt" type="text" width="15"
       autocomplete="off"  autofocus />
-    <input type="submit" name="try" />
   </form>
 </div></div>
 
-<br />
-
-{% if session.matches|length is not equalto 0  %}
-<h2>You found </h2>
-<p id="results">
-  {% for match in session.matches %}
-  {{ match }} 
-  {% endfor %}
-</p>
-{% endif %}
-
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <!-- Mismatch, already found, etc. "flashed" from Python -->
-    {% for message in messages %}
-      <p class="message">{{ message }}</p>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
+<br/>
+<p id="winning_message"></p>
+<h2 id="you_found_title"></h2>
+<p id=results></p>
+<p id="message" class="message"></p>
 
 
  </div> <!-- container -->
+
+ <script>
+	//Suppress normal form submission
+	 $("#entry").submit( function(event) {
+		event.preventDefault();
+	 })
+
+	//Handle keypress
+	$("#entry").keyup(function(event) {
+		//console.log("Working!");
+		document.getElementById("message").innerHTML = ""; 
+		var txt = $("#attempt").val(); //Current content of the text field
+		var keycode = event.which;   //The key that was pressed
+		var letter = String.fromCharCode(keycode); 
+		if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)){ return; }
+		//console.log(txt);
+		$.getJSON("/_checkajax", { text: txt }, 
+			function(data){
+			rsval = data.stat;
+			console.log(rsval);
+			if(rsval == "success"){
+				//$("#results").append(txt);
+				addword(txt);
+			}else{
+				document.getElementById("message").innerHTML = data.message;	
+			}
+
+			if(data.win){
+				document.getElementById("winning_message").innerHTML = "You win!" + 
+					'<a href="/index"> Play again?</a>';
+			}
+			
+		});
+		return;
+	})
+
+	function addword(word){
+		if(document.getElementById("results").innerHTML == ""){
+			document.getElementById("you_found_title").innerHTML = "You\'ve found: "
+			$("#results").append(word);
+		}else{
+			$("#results").append(", " + word);
+		}
+	}
+
+
+ </script>
 </body> </html>
